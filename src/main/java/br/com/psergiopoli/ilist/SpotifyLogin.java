@@ -34,7 +34,7 @@ public class SpotifyLogin {
 
 	public JwtToken getJwtToken() {
 		
-		if (jwtToken != null) { // Fazer verificação da expiração
+		if (jwtToken != null) { // Fazer verificacao da expiracao
 			return jwtToken;
 		}		
 		

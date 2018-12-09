@@ -28,8 +28,7 @@ public class TrackListService {
 	Logger logger = LoggerFactory.getLogger(TrackListService.class);
 	
 	@Autowired
-	public TrackListService(WeatherRepository weatherRepository,
-			RecomendationRepository recomendationRepository
+	public TrackListService(WeatherRepository weatherRepository, RecomendationRepository recomendationRepository
 			) {
 		this.weatherRepository = weatherRepository;
 		this.recomendationRepository = recomendationRepository;
@@ -37,14 +36,30 @@ public class TrackListService {
 	
 	public List<Track> getTrackList(String cityName) {
 		WeatherInfo weatherInfo = getWeather(cityName);
+
 		Genre genre = TempUtil.getGenreByTemp(weatherInfo.getMain().getTemp());
-		return this.recomendationRepository.getRecomendationListByGenre(genre).getTracks();
+		
+		try {
+			List<Track> tracks = this.recomendationRepository.getRecomendationListByGenre(genre).getTracks();
+			return tracks;
+		} catch (HttpClientErrorException e) {
+			logger.error(e.getMessage(), e);
+			throw new IListExpcetion("Erro ao buscar musicas no spotify", e.getStatusCode());
+		}
 	}
 	
 	public List<Track> getTrackList(Float lat, Float lon) {
 		WeatherInfo weatherInfo = getWeather(lat, lon);
+		
 		Genre genre = TempUtil.getGenreByTemp(weatherInfo.getMain().getTemp());
-		return this.recomendationRepository.getRecomendationListByGenre(genre).getTracks();
+		
+		try {
+			List<Track> tracks = this.recomendationRepository.getRecomendationListByGenre(genre).getTracks();
+			return tracks;
+		} catch (HttpClientErrorException e) {
+			logger.error(e.getMessage(), e);
+			throw new IListExpcetion("Erro ao buscar musicas no spotify", e.getStatusCode());
+		}
 	}
 
 	private WeatherInfo getWeather(String cityName) {
