@@ -1,5 +1,7 @@
 package br.com.psergiopoli.ilist.service;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,22 +11,43 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import br.com.psergiopoli.ilist.exceptions.CityNotFoundException;
 import br.com.psergiopoli.ilist.exceptions.IListExpcetion;
+import br.com.psergiopoli.ilist.model.Spotify.Track;
 import br.com.psergiopoli.ilist.model.Weather.WeatherInfo;
+import br.com.psergiopoli.ilist.repository.RecomendationRepository;
 import br.com.psergiopoli.ilist.repository.WeatherRepository;
+import br.com.psergiopoli.ilist.util.Genre;
+import br.com.psergiopoli.ilist.util.TempUtil;
 
 @Service
-public class WeatherService {
+public class TrackListService {
 	
 	private WeatherRepository weatherRepository;
 	
-	Logger logger = LoggerFactory.getLogger(WeatherService.class);
+	private RecomendationRepository recomendationRepository;
+	
+	Logger logger = LoggerFactory.getLogger(TrackListService.class);
 	
 	@Autowired
-	public WeatherService(WeatherRepository weatherRepository) {
+	public TrackListService(WeatherRepository weatherRepository,
+			RecomendationRepository recomendationRepository
+			) {
 		this.weatherRepository = weatherRepository;
+		this.recomendationRepository = recomendationRepository;
+	}
+	
+	public List<Track> getTrackList(String cityName) {
+		WeatherInfo weatherInfo = getWeather(cityName);
+		Genre genre = TempUtil.getGenreByTemp(weatherInfo.getMain().getTemp());
+		return this.recomendationRepository.getRecomendationListByGenre(genre).getTracks();
+	}
+	
+	public List<Track> getTrackList(Float lat, Float lon) {
+		WeatherInfo weatherInfo = getWeather(lat, lon);
+		Genre genre = TempUtil.getGenreByTemp(weatherInfo.getMain().getTemp());
+		return this.recomendationRepository.getRecomendationListByGenre(genre).getTracks();
 	}
 
-	public WeatherInfo getWeather(String cityName) {
+	private WeatherInfo getWeather(String cityName) {
 		try {
 			return this.weatherRepository.findWeatherInfoByCityName(cityName);
 		} catch (HttpClientErrorException e) {
@@ -37,7 +60,7 @@ public class WeatherService {
 		}
 	}
 	
-	public WeatherInfo getWeather(Float lat, Float lon) {
+	private WeatherInfo getWeather(Float lat, Float lon) {
 		try {
 			return this.weatherRepository.findWeatherInfoByLatLon(lat, lon);
 		} catch (HttpClientErrorException e) {
